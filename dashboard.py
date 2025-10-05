@@ -159,7 +159,7 @@ with tab1:
         
         with results_placeholder.container():
             st.subheader(f"Resultado para el punto seleccionado:")
-            st.metric(label=f"{emoji} Nivel de probabilidad", value=level)
+            st.metric(label=f"{emoji} Nivel de probabilidad de encontrar tiburones en ese punto", value=level)
             st.metric(label="Valor de probabilidad", value=f"{probability:.2%}")
             st.progress(probability)
             
@@ -298,5 +298,37 @@ with tab3:
         Nuestra **red neuronal** es la implementación que resuelve esta ecuación. El modelo aprendió la relación entre las características ambientales de cada clúster y la probabilidad de encontrar tiburones en esas zonas.
 
         La predicción final es una **"predicción proxy"** inteligente. El modelo utiliza patrones de los clústeres además de conocimiento biológico sobre el comportamiento de los tiburones y las características del mar para estimar dónde es más probable que se encuentren.
+        """
+    )
+
+    st.markdown("---")
+
+# Título principal de la sección
+st.header("Propuesta de rediseño de etiqueta de archivo satelital emergente")
+
+# Layout de dos columnas para la imagen y el texto
+img_col, text_col = st.columns([2, 3])
+
+with img_col:
+    # **AQUÍ VA LA IMAGEN DE TU TAG**
+    st.image(
+        'tag.jpg', # REEMPLAZA con la ruta a tu imagen
+        use_column_width=True # Asegura que la imagen se ajuste al ancho de la columna
+    )
+
+with text_col:
+    # **AQUÍ VA TU TEXTO EXACTO**
+    st.write(
+        """
+        El tag registrará información esencial del entorno y del comportamiento del 
+        tiburón mediante sensores de presión, aceleración, temperatura y luz, permitiendo 
+        construir una visión tridimensional de su vida bajo el mar. La presión medirá la profundidad y los patrones de 
+        inmersión, el acelerómetro captará el movimiento y el esfuerzo físico para distinguir entre nado, caza o reposo, el 
+        termistor registrará variaciones térmicas que reflejan cambios ambientales, y el sensor óptico medirá la intensidad lumínica, 
+        revelando diferencias entre actividad diurna y nocturna. Al combinar estos datos con la ubicación satelital 
+        obtenida cuando el tiburón emerge, el sistema generará mapas dinámicos de comportamiento, donde cada tipo de actividad se 
+        representa con un color distinto, creando una visualización que muestra las zonas de alimentación, descanso o desplazamiento. 
+        Integrados con los datos satelitales de la NASA (PACE, SWOT y SST), estos mapas permitirán interpretar cómo las condiciones del 
+        océano moldean la conducta de las especies y evidencian los efectos del cambio climático.
         """
     )
