@@ -139,22 +139,23 @@ with tab1:
         with results_placeholder.container():
             st.info("ℹ️ Haz clic en un punto del mapa para iniciar el análisis.")
 
-# --- PESTAÑA 2: SECCIÓN DIDÁCTICA ---
+# --- PESTAÑA 2: SECCIÓN DIDÁCTICA (AHORA CON AUTOPLAY Y TU TEXTO ACTUALIZADO) ---
 with tab2:
-    # ... (Todo el código de la Pestaña 2 se queda exactamente igual) ...
     st.header("Plancton y corrientes")
     st.write("Nuestro modelo funciona como un detective que busca dos pistas clave en el océano para encontrar los lugares preferidos de los tiburones. Estas pistas, invisibles al ojo humano, son capturadas por los satélites de la NASA.")
     
+    # --- Layout de dos columnas para los videos ---
     video_col1, video_col2 = st.columns(2)
 
     with video_col1:
         st.subheader("El Plancton, base de la cadena alimenticia")
         try:
+            # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
             autoplay_video('https://raw.githubusercontent.com/JorgeAndujoV/NASA_spaceapp_challenge/main/plancton.webm') 
             st.caption("Crédito: MIT Darwin Project, ECCO2, MITgcm")
-        except Exception:
-            st.warning("No se pudo cargar el video de plancton.")
-    
+        except FileNotFoundError:
+            st.error("No se encontró el archivo 'plancton.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
+            
         st.markdown(
             """
             El **fitoplancton** son algas microscópicas que forman la base de toda la cadena alimenticia en el océano. 
@@ -166,10 +167,11 @@ with tab2:
     with video_col2:
         st.subheader("Las corrientes, autopistas del océano")
         try:
+            # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
             autoplay_video('https://raw.githubusercontent.com/JorgeAndujoV/NASA_spaceapp_challenge/main/currents.webm') 
             st.caption("Crédito: NASA/Goddard Space Flight Center Scientific Visualization Studio")
-        except Exception:
-            st.warning("No se pudo cargar el video de corrientes.")
+        except FileNotFoundError:
+            st.error("No se encontró el archivo 'currents.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
             
         st.markdown(
             """
@@ -178,10 +180,33 @@ with tab2:
             **Nuestra herramienta** emplea datos imágenes satelitales de la NASA para identificar estas rutas y puntos calientes, ayudándonos a predecir dónde es más probable que los tiburones patrullen en busca de alimento.
             """
         )
-
-# --- PESTAÑA 3: METODOLOGÍA Y PROPUESTA ---
+    
+    st.markdown("---")
+    
+    st.header("¿Por qué es importante encontrar a los tiburones?")
+    st.write(
+        """
+        Encontrar a los tiburones no es solo para satisfacer nuestra curiosidad. Los tiburones son **depredadores tope** y, como tales, son **bioindicadores cruciales de la salud del océano**.
+        """
+    )
+    
+    st.subheader("Indicadores de ecosistemas saludables")
+    st.markdown(
+        """
+        Una población saludable de tiburones en una zona indica que toda la cadena alimenticia debajo de ellos es robusta y está en equilibrio. Si los tiburones desaparecen de un área, puede ser una señal de alerta temprana de problemas más graves como la sobrepesca, la contaminación o los efectos del cambio climático en los niveles más bajos del ecosistema.
+        """
+    )
+    
+    st.subheader("¿Qué problema estamos resolviendo?")
+    st.markdown(
+        """
+        - **Conservación eficiente:** Al predecir sus hábitats de alimentación, podemos ayudar a diseñar **Áreas Marinas Protegidas (AMP)** que sean dinámicas y más efectivas, protegiendo los lugares donde los tiburones son más vulnerables.
+        - **Monitoreo climático:** Rastrear cómo cambian estos hábitats a lo largo del tiempo nos proporciona datos valiosos sobre cómo el cambio climático está impactando la vida marina y la distribución de especies.
+        - **Mitigación de la pesca incidental:** Nuestra herramienta podría alertar a las flotas pesqueras sobre zonas de alta probabilidad de actividad de tiburones, ayudando a reducir el número de tiburones capturados accidentalmente.
+        """
+    )
+# --- PESTAÑA 3: NUESTRA METODOLOGÍA Y PROPUESTA ---
 with tab3:
-    # ... (Todo el código de la Pestaña 3 se queda exactamente igual) ...
     st.header("Datos satelitales y machine learning")
     st.write(
         """
@@ -189,13 +214,15 @@ with tab3:
         """
     )
     st.markdown("---")
+
+    # --- Layout de Columnas para la explicación del Clustering ---
     img_col_cluster, text_col_cluster = st.columns([2, 3])
 
     with img_col_cluster:
         st.image(
-            'enesep.png', 
+            'enesep.png', # Asegúrate de que el nombre del archivo y la ruta sean correctos
             caption="Visualización de los clústeres oceanográficos identificados por nuestro modelo, comparación enero-septiembre de dos años.",
-            use_container_width=True
+            use_container_width=True # Parámetro actualizado
         )
 
     with text_col_cluster:
@@ -205,6 +232,7 @@ with tab3:
             Comenzamos con bases de datos de imagenes satelitales de la NASA que capturan variables oceánicas clave como la temperatura del mar, la salinidad, la clorofila (indicador de plancton) y las corrientes oceánicas.
             """
         )
+        
         st.subheader("2. Clústering para entender el océano")
         st.markdown(
             """
@@ -215,15 +243,20 @@ with tab3:
         )
 
     st.markdown("---")
+
+    # --- Sección de la Predicción (Texto y Fórmula) ---
     st.subheader("3. Predicción de hábitats de tiburones")
+    
     st.markdown(
         """
         Con el océano ya etiquetado por clústeres, entrenamos una **red neuronal**. Esta fórmula representa el **marco teórico** de nuestro enfoque, donde la probabilidad de un tiburón se calcula a partir de la probabilidad de cada tipo de ambiente:
         """
     )
+
     st.latex(r'''
         P(\text{shark}|x) = \sum_{k=1}^{K} P(\text{cluster} = k|x) P(\text{shark}|\text{cluster} = k, \text{time})
     ''')
+
     st.markdown(
         """
         Nuestra **red neuronal** es la implementación que resuelve esta ecuación. El modelo aprendió la relación entre las características ambientales de cada clúster y la probabilidad de encontrar tiburones en esas zonas.
@@ -231,18 +264,24 @@ with tab3:
         La predicción final es una **"predicción proxy"** inteligente. El modelo utiliza patrones de los clústeres además de conocimiento biológico sobre el comportamiento de los tiburones y las características del mar para estimar dónde es más probable que se encuentren.
         """
     )
+
     st.markdown("---")
+
+    # --- Sección de la Propuesta del Tag ---
     st.header("Propuesta de rediseño de etiqueta de archivo satelital emergente")
+
     img_col_tag, text_col_tag = st.columns([2, 3])
+    
     with img_col_tag:
         st.image(
-            'tag.jpg',
-            use_container_width=True,
+            'tag.jpg', 
+            use_container_width=True, # Parámetro actualizado
             caption="Propuesta de tag satelital avanzado."
         )
+
     with text_col_tag:
         st.write(
             """
-            El tag registrará información esencial del entorno y del comportamiento del tiburón...
+            El tag registrará información esencial del entorno y del comportamiento del tiburón mediante sensores de presión, aceleración, temperatura y luz, permitiendo construir una visión tridimensional de su vida bajo el mar. La presión medirá la profundidad y los patrones de inmersión, el acelerómetro captará el movimiento y el esfuerzo físico para distinguir entre nado, caza o reposo, el termistor registrará variaciones térmicas que reflejan cambios ambientales, y el sensor óptico medirá la intensidad lumínica, revelando diferencias entre actividad diurna y nocturna. Al combinar estos datos con la ubicación satelital obtenida cuando el tiburón emerge, el sistema generará mapas dinámicos de comportamiento, donde cada tipo de actividad se representa con un color distinto, creando una visualización que muestra las zonas de alimentación, descanso o desplazamiento. Integrados con los datos satelitales de la NASA (PACE, SWOT y SST), estos mapas permitirán interpretar cómo las condiciones del océano moldean la conducta de las especies y evidencian los efectos del cambio climático.
             """
         )
