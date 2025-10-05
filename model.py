@@ -3,7 +3,7 @@ import joblib
 import json
 import os
 import tensorflow as tf
-from keras.models import load_model
+#from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler
 import hashlib
 
@@ -26,29 +26,29 @@ def _load_model_once():
         # Ruta específica de tu modelo
         MODEL_DIR = 'shark_model_optimized_v3.0.0_20251005_203403'
         
-        print("Cargando modelo de predicción de tiburones...")
+        print("🦈 Cargando modelo de predicción de tiburones...")
         
         # 1. Cargar modelo Keras
         model_path = os.path.join(MODEL_DIR, "shark_prediction_model.h5")
-        _MODEL = load_model(model_path)
-        print(f"Modelo cargado: {os.path.basename(model_path)}")
+        _MODEL = tf.keras.models.load_model(model_path)
+        print(f"✅ Modelo cargado: {os.path.basename(model_path)}")
         
         # 2. Cargar scaler
         scaler_path = os.path.join(MODEL_DIR, "scaler.pkl")
         _SCALER = joblib.load(scaler_path)
-        print("Scaler cargado")
+        print("✅ Scaler cargado")
         
         # 3. Cargar pesos de clusters
         weights_path = os.path.join(MODEL_DIR, "cluster_weights.json")
         with open(weights_path, 'r') as f:
             _W_K = json.load(f)
-        print("Pesos de clusters cargados")
+        print("✅ Pesos de clusters cargados")
         
         _MODEL_LOADED = True
-        print("Modelo listo para predicciones")
+        print("🎯 Modelo listo para predicciones")
         
     except Exception as e:
-        print(f"Error cargando modelo: {e}")
+        print(f"⚠ Error cargando modelo: {e}")
         print("🔄 Usando modo fallback para predicciones")
         _MODEL_LOADED = False
 
@@ -166,7 +166,7 @@ def mock_model_predict(lat: float, lon: float, month: int, year: int) -> float:
         return shark_risk
         
     except Exception as e:
-        print(f"Error en predicción: {e}, usando fallback")
+        print(f"⚠ Error en predicción: {e}, usando fallback")
         return _fallback_prediction(lat, lon, month, year)
 
 # VERSIÓN MEJORADA CON MÁS INFORMACIÓN (opcional)
@@ -221,7 +221,7 @@ def enhanced_shark_predict(lat: float, lon: float, month: int, year: int) -> dic
 # EJEMPLOS DE USO
 if __name__ == "__main__":
     # Ejemplo de uso básico (igual que tu función original)
-    print("PREDICCIONES BÁSICAS:")
+    print("🎯 PREDICCIONES BÁSICAS:")
     test_cases = [
         (-17.54167, -107.70833, 1, 2024),
         (-18.04167, 163.45834, 1, 2024),
@@ -230,9 +230,9 @@ if __name__ == "__main__":
     
     for lat, lon, month, year in test_cases:
         risk = mock_model_predict(lat, lon, month, year)
-        print(f" ({lat:.2f}, {lon:.2f}) |  {month}/{year} |  Riesgo: {risk:.4f}")
+        print(f"📍 ({lat:.2f}, {lon:.2f}) | 📅 {month}/{year} | 🦈 Riesgo: {risk:.4f}")
     
-    print("\nPREDICCIONES DETALLADAS:")
+    print("\n📊 PREDICCIONES DETALLADAS:")
     # Ejemplo de uso mejorado
     detailed = enhanced_shark_predict(-17.54167, -107.70833, 1, 2024)
     print("Predicción detallada:")
