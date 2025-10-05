@@ -4,6 +4,7 @@ from streamlit_folium import st_folium
 import random
 import datetime
 import base64
+from model import mock_model_predict
 # =============================================================================
 # 1. CONFIGURACIÓN DE LA PÁGINA
 # =============================================================================
@@ -12,22 +13,6 @@ st.set_page_config(
     page_icon="🦈",
     layout="wide",
 )
-
-# =============================================================================
-# 2. SIMULACIÓN DEL MODELO DE PREDICCIÓN (MOCK MODEL)
-# =============================================================================
-def mock_model_predict(lat: float, lon: float, month: int, year: int) -> float:
-    """
-    Simula la predicción de un modelo de ML.
-    Toma coordenadas y fecha y devuelve una probabilidad entre 0.0 y 1.0.
-    Usamos la entrada como 'seed' para que el resultado sea aleatorio pero consistente.
-    """
-    # La semilla asegura que para la misma lat/lon/fecha, siempre obtengas el mismo número "aleatorio"
-    seed = f"{lat}{lon}{month}{year}"
-    random.seed(seed)
-    # Genera la probabilidad
-    probability = random.uniform(0.0, 1.0)
-    return probability
 
 # =============================================================================
 # 3. FUNCIONES AUXILIARES
