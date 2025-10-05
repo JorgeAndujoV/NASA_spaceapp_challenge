@@ -107,7 +107,7 @@ with tab1:
             date = st.session_state.date_input
             
             # Calcular probabilidad y detalles para el marcador
-            probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.8, 1.2)
+            probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.5, 3.2)
             level, color, emoji = get_probability_details(probability)
 
             # Crear el texto del popup
@@ -139,7 +139,7 @@ with tab1:
         lon = st.session_state["last_clicked"]["lng"]
         date = st.session_state.date_input
         
-        probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.8, 1.2)
+        probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.5, 3.2)
         level, color, emoji = get_probability_details(probability)
         
         with results_placeholder.container():
