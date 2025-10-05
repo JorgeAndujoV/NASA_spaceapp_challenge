@@ -237,7 +237,7 @@ with tab2:
         - **Mitigación de la pesca incidental:** Nuestra herramienta podría alertar a las flotas pesqueras sobre zonas de alta probabilidad de actividad de tiburones, ayudando a reducir el número de tiburones capturados accidentalmente.
         """
     )
-# --- PESTAÑA 3: NUESTRA METODOLOGÍA (VERSIÓN CORREGIDA) ---
+# --- PESTAÑA 3: NUESTRA METODOLOGÍA Y PROPUESTA ---
 with tab3:
     st.header("Datos satelitales y machine learning")
     st.write(
@@ -247,18 +247,17 @@ with tab3:
     )
     st.markdown("---")
 
-    # --- CAMBIO CLAVE: Definimos UN SOLO par de columnas para las secciones 1 y 2 ---
-    img_col, text_col = st.columns([2, 3]) # Damos un poco más de espacio al texto
+    # --- Layout de Columnas para la explicación del Clustering ---
+    img_col_cluster, text_col_cluster = st.columns([2, 3])
 
-    # --- Columna Izquierda: Imagen ---
-    with img_col:
+    with img_col_cluster:
         st.image(
-            'enesep.png', # Asegúrate de que el nombre del archivo sea correcto
-            caption="Visualización de los clústeres oceanográficos identificados por nuestro modelo, comparación enero-septiembre de dos años."
+            'enesep.png', # Asegúrate de que el nombre del archivo y la ruta sean correctos
+            caption="Visualización de los clústeres oceanográficos identificados por nuestro modelo, comparación enero-septiembre de dos años.",
+            use_container_width=True # Parámetro actualizado
         )
 
-    # --- Columna Derecha: Texto de las secciones 1 y 2 ---
-    with text_col:
+    with text_col_cluster:
         st.subheader("1. Procesamiento de datos de la NASA")
         st.markdown(
             """
@@ -277,22 +276,19 @@ with tab3:
 
     st.markdown("---")
 
-    # --- CAMBIO CLAVE: Separamos el texto de la fórmula para un formato perfecto ---
+    # --- Sección de la Predicción (Texto y Fórmula) ---
     st.subheader("3. Predicción de hábitats de tiburones")
     
-    # Texto ANTES de la fórmula
     st.markdown(
         """
         Con el océano ya etiquetado por clústeres, entrenamos una **red neuronal**. Esta fórmula representa el **marco teórico** de nuestro enfoque, donde la probabilidad de un tiburón se calcula a partir de la probabilidad de cada tipo de ambiente:
         """
     )
 
-    # La fórmula con st.latex() para que se vea perfecta
     st.latex(r'''
         P(\text{shark}|x) = \sum_{k=1}^{K} P(\text{cluster} = k|x) P(\text{shark}|\text{cluster} = k, \text{time})
     ''')
 
-    # Texto DESPUÉS de la fórmula
     st.markdown(
         """
         Nuestra **red neuronal** es la implementación que resuelve esta ecuación. El modelo aprendió la relación entre las características ambientales de cada clúster y la probabilidad de encontrar tiburones en esas zonas.
@@ -303,32 +299,21 @@ with tab3:
 
     st.markdown("---")
 
-# Título principal de la sección
-st.header("Propuesta de rediseño de etiqueta de archivo satelital emergente")
+    # --- Sección de la Propuesta del Tag ---
+    st.header("Propuesta de rediseño de etiqueta de archivo satelital emergente")
 
-# Layout de dos columnas para la imagen y el texto
-img_col, text_col = st.columns([2, 3])
+    img_col_tag, text_col_tag = st.columns([2, 3])
+    
+    with img_col_tag:
+        st.image(
+            'static_images/conceptual_tag.png', # ¡RECUERDA VERIFICAR ESTA RUTA Y NOMBRE DE ARCHIVO!
+            use_container_width=True, # Parámetro actualizado
+            caption="Propuesta de tag satelital avanzado."
+        )
 
-with img_col:
-    # **AQUÍ VA LA IMAGEN DE TU TAG**
-    st.image(
-        'tag.jpg', # REEMPLAZA con la ruta a tu imagen
-        use_column_width=True # Asegura que la imagen se ajuste al ancho de la columna
-    )
-
-with text_col:
-    # **AQUÍ VA TU TEXTO EXACTO**
-    st.write(
-        """
-        El tag registrará información esencial del entorno y del comportamiento del 
-        tiburón mediante sensores de presión, aceleración, temperatura y luz, permitiendo 
-        construir una visión tridimensional de su vida bajo el mar. La presión medirá la profundidad y los patrones de 
-        inmersión, el acelerómetro captará el movimiento y el esfuerzo físico para distinguir entre nado, caza o reposo, el 
-        termistor registrará variaciones térmicas que reflejan cambios ambientales, y el sensor óptico medirá la intensidad lumínica, 
-        revelando diferencias entre actividad diurna y nocturna. Al combinar estos datos con la ubicación satelital 
-        obtenida cuando el tiburón emerge, el sistema generará mapas dinámicos de comportamiento, donde cada tipo de actividad se 
-        representa con un color distinto, creando una visualización que muestra las zonas de alimentación, descanso o desplazamiento. 
-        Integrados con los datos satelitales de la NASA (PACE, SWOT y SST), estos mapas permitirán interpretar cómo las condiciones del 
-        océano moldean la conducta de las especies y evidencian los efectos del cambio climático.
-        """
-    )
+    with text_col_tag:
+        st.write(
+            """
+            El tag registrará información esencial del entorno y del comportamiento del tiburón mediante sensores de presión, aceleración, temperatura y luz, permitiendo construir una visión tridimensional de su vida bajo el mar. La presión medirá la profundidad y los patrones de inmersión, el acelerómetro captará el movimiento y el esfuerzo físico para distinguir entre nado, caza o reposo, el termistor registrará variaciones térmicas que reflejan cambios ambientales, y el sensor óptico medirá la intensidad lumínica, revelando diferencias entre actividad diurna y nocturna. Al combinar estos datos con la ubicación satelital obtenida cuando el tiburón emerge, el sistema generará mapas dinámicos de comportamiento, donde cada tipo de actividad se representa con un color distinto, creando una visualización que muestra las zonas de alimentación, descanso o desplazamiento. Integrados con los datos satelitales de la NASA (PACE, SWOT y SST), estos mapas permitirán interpretar cómo las condiciones del océano moldean la conducta de las especies y evidencian los efectos del cambio climático.
+            """
+        )
