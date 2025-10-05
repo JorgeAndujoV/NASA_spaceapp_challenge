@@ -306,7 +306,7 @@ with tab3:
     
     with img_col_tag:
         st.image(
-            'static_images/conceptual_tag.png', # ¡RECUERDA VERIFICAR ESTA RUTA Y NOMBRE DE ARCHIVO!
+            'tag.jpg', 
             use_container_width=True, # Parámetro actualizado
             caption="Propuesta de tag satelital avanzado."
         )
