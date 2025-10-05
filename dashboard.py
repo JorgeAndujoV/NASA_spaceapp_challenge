@@ -107,7 +107,7 @@ with tab1:
             date = st.session_state.date_input
             
             # Calcular probabilidad y detalles para el marcador
-            probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.8, 1)
+            probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.6, 1)
             level, color, emoji = get_probability_details(probability)
 
             # Crear el texto del popup
