@@ -7,9 +7,11 @@ import base64
 import os
 
 # <-- 1. IMPORTAMOS EL MODELO REAL DESDE model.py
-# Le cambiamos el nombre a 'real_model_predict' para mayor claridad.
-from model import mock_model_predict as real_model_predict
+from model import enhanced_shark_predict
 
+@st.cache_data(show_spinner=False)
+def predict_once(lat: float, lon: float, month: int, year: int) -> dict:
+    return enhanced_shark_predict(lat, lon, month, year)
 # =============================================================================
 # 1. CONFIGURACIÓN DE LA PÁGINA
 # =============================================================================
@@ -83,61 +85,72 @@ with tab1:
         st.markdown("---")
         results_placeholder = st.empty()
 
-    with map_col:
-        if st.session_state["last_clicked"]:
-            location = [st.session_state["last_clicked"]["lat"], st.session_state["last_clicked"]["lng"]]
-            zoom = 6
-        else:
-            location = [20, 0]
-            zoom = 2.5
-        m = folium.Map(location=location, zoom_start=zoom)
-
-        if st.session_state["last_clicked"]:
-            lat = st.session_state["last_clicked"]["lat"]
-            lon = st.session_state["last_clicked"]["lng"]
-            date = st.session_state.date_input
-            
-            # <-- 3. USAMOS EL MODELO REAL
-            probability = real_model_predict(lat, lon, date.month, date.year)
-            level, color, emoji = get_probability_details(probability)
-            popup_text = f"""
-            <b>Ubicación Analizada</b><br>
-            Lat: {lat:.2f}, Lon: {lon:.2f}<br>
-            Probabilidad: <b>{probability:.0%} ({level})</b>
-            """
-            folium.Marker(
-                location=[lat, lon],
-                popup=folium.Popup(popup_text, max_width=300),
-                icon=folium.Icon(color=color, icon="life-ring", prefix='fa')
-            ).add_to(m)
-
-        map_data = st_folium(m, height=600, width="100%", returned_objects=["last_clicked"])
-
-        if map_data and map_data["last_clicked"]:
-            st.session_state["last_clicked"] = map_data["last_clicked"]
-            st.rerun()
-
+with map_col:
+    # Centrado inicial
     if st.session_state["last_clicked"]:
-        lat = st.session_state["last_clicked"]["lat"]
-        lon = st.session_state["last_clicked"]["lng"]
-        date = st.session_state.date_input
-        
-        # <-- 3. USAMOS EL MODELO REAL (de nuevo para el panel)
-        probability = real_model_predict(lat, lon, date.month, date.year)
-        level, color, emoji = get_probability_details(probability)
-        
-        with results_placeholder.container():
-            st.subheader(f"Resultado para el punto seleccionado:")
-            st.metric(label=f"{emoji} Nivel de probabilidad", value=level)
-            st.metric(label="Valor de probabilidad", value=f"{probability:.2%}")
-            st.progress(probability)
-            with st.expander("Detalles de la entrada"):
-                st.write(f"**Latitud:** {lat:.4f}")
-                st.write(f"**Longitud:** {lon:.4f}")
-                st.write(f"**Fecha:** {date.strftime('%B %Y')}")
+        location = [st.session_state["last_clicked"]["lat"], st.session_state["last_clicked"]["lng"]]
+        zoom = 6
     else:
-        with results_placeholder.container():
-            st.info("ℹ️ Haz clic en un punto del mapa para iniciar el análisis.")
+        location = [20, 0]
+        zoom = 2.5
+
+    m = folium.Map(location=location, zoom_start=zoom)
+
+    # Si hay punto seleccionado, calculamos UNA vez y lo usamos en mapa y panel
+    prediction_res = None
+    if st.session_state["last_clicked"]:
+        lat = float(st.session_state["last_clicked"]["lat"])
+        lon = float(st.session_state["last_clicked"]["lng"])
+        date = st.session_state.date_input
+
+        # 🔮 Predicción única (cacheada)
+        prediction_res = predict_once(lat, lon, date.month, date.year)
+        probability = float(prediction_res['risk_probability'])
+        level, color, emoji = get_probability_details(probability)
+
+        popup_text = f"""
+        <b>Ubicación Analizada</b><br>
+        Lat: {lat:.2f}, Lon: {lon:.2f}<br>
+        Probabilidad: <b>{probability:.0%} ({level})</b>
+        """
+        folium.Marker(
+            location=[lat, lon],
+            popup=folium.Popup(popup_text, max_width=300),
+            icon=folium.Icon(color=color, icon="life-ring", prefix='fa')
+        ).add_to(m)
+
+    map_data = st_folium(m, height=600, width="100%", returned_objects=["last_clicked"])
+
+    if map_data and map_data["last_clicked"]:
+        st.session_state["last_clicked"] = map_data["last_clicked"]
+        st.rerun()
+
+# Panel de resultados: reutiliza la MISMA predicción ya hecha
+if st.session_state["last_clicked"]:
+    # Si por flujo de ejecución prediction_res es None (poco probable), recalculamos
+    if prediction_res is None:
+        lat = float(st.session_state["last_clicked"]["lat"])
+        lon = float(st.session_state["last_clicked"]["lng"])
+        date = st.session_state.date_input
+        prediction_res = predict_once(lat, lon, date.month, date.year)
+
+    probability = float(prediction_res['risk_probability'])
+    model_is_real = bool(prediction_res['model_used'])
+    level, color, emoji = get_probability_details(probability)
+
+    with results_placeholder.container():
+        st.subheader("Resultado para el punto seleccionado:")
+        st.metric(label=f"{emoji} Nivel de probabilidad", value=level)
+        st.metric(label="Valor de probabilidad", value=f"{probability:.2%}")
+        st.metric(label="Modelo en uso", value=("Real ✅" if model_is_real else "Fallback ⚠️"))
+        st.progress(max(0.0, min(1.0, probability)))  # clamp defensivo
+        with st.expander("Detalles de la entrada"):
+            st.write(f"**Latitud:** {lat:.4f}")
+            st.write(f"**Longitud:** {lon:.4f}")
+            st.write(f"**Fecha:** {date.strftime('%B %Y')}")
+else:
+    with results_placeholder.container():
+        st.info("ℹ️ Haz clic en un punto del mapa para iniciar el análisis.")
 
 # --- PESTAÑA 2: SECCIÓN DIDÁCTICA (AHORA CON AUTOPLAY Y TU TEXTO ACTUALIZADO) ---
 with tab2:
