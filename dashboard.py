@@ -3,7 +3,7 @@ import folium
 from streamlit_folium import st_folium
 import random
 import datetime
-
+import base64
 # =============================================================================
 # 1. CONFIGURACIÓN DE LA PÁGINA
 # =============================================================================
@@ -58,6 +58,19 @@ def get_probability_details(probability: float) -> tuple:
 if "last_clicked" not in st.session_state:
     st.session_state["last_clicked"] = None
 
+# --- FUNCIÓN AUXILIAR PARA VIDEOS CON AUTOPLAY Y LOOP ---
+# La he movido aquí para que esté disponible para la pestaña 2
+def autoplay_video(video_file_path: str):
+    with open(video_file_path, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f"""
+        <video controls loop autoplay="true" muted="true" style="width:100%;">
+            <source src="data:video/webm;base64,{b64}" type="video/webm">
+        </video>
+        """
+        st.markdown(md, unsafe_allow_html=True)
+
 # =============================================================================
 # 5. CONSTRUCCIÓN DE LA INTERFAZ GRÁFICA (UI)
 # =============================================================================
@@ -69,7 +82,7 @@ st.markdown("Una herramienta para predecir hábitats de forrajeo de tiburones ut
 # --- ESTRUCTURA DE PESTAÑAS PARA ORGANIZAR EL CONTENIDO ---
 tab1, tab2 = st.tabs(["🌎 Herramienta Predictiva", "🔬 La Ciencia Detrás del Modelo"])
 
-# --- PESTAÑA 1: HERRAMIENTA PREDICTIVA (Tu código original) ---
+# --- PESTAÑA 1: HERRAMIENTA PREDICTIVA (Tu código original - NO HA CAMBIADO) ---
 with tab1:
     # --- LAYOUT DE DOS COLUMNAS ---
     map_col, results_col = st.columns([3, 2]) # El mapa ocupa más espacio
@@ -149,20 +162,19 @@ with tab1:
         else:
             st.info("ℹ️ Haz clic en un punto del mapa para iniciar el análisis.")
 
-# --- PESTAÑA 2: SECCIÓN DIDÁCTICA ---
+# --- PESTAÑA 2: SECCIÓN DIDÁCTICA (AHORA CON AUTOPLAY Y TU TEXTO ACTUALIZADO) ---
 with tab2:
-    st.header("Los Ingredientes de la Predicción: Plancton y Corrientes")
+    st.header("Plancton y corrientes")
     st.write("Nuestro modelo funciona como un detective que busca dos pistas clave en el océano para encontrar los lugares preferidos de los tiburones. Estas pistas, invisibles al ojo humano, son capturadas por los satélites de la NASA.")
     
     # --- Layout de dos columnas para los videos ---
     video_col1, video_col2 = st.columns(2)
 
     with video_col1:
-        st.subheader("Pista 1: El Plancton (La Base de la Vida)")
+        st.subheader("El Plancton, base de la cadena alimenticia")
         try:
-            video_file_plancton = open('plancton.webm', 'rb')
-            video_bytes_plancton = video_file_plancton.read()
-            st.video(video_bytes_plancton)
+            # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
+            autoplay_video('plancton.webm') 
             st.caption("Crédito: MIT Darwin Project, ECCO2, MITgcm")
         except FileNotFoundError:
             st.error("No se encontró el archivo 'plancton.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
@@ -171,16 +183,15 @@ with tab2:
             """
             El **fitoplancton** son algas microscópicas que forman la base de toda la cadena alimenticia en el océano. 
             - **¿Por qué es relevante?** Donde hay grandes concentraciones de plancton, hay pequeños peces y crustáceos alimentándose. Esto atrae a peces más grandes, que a su vez, son el alimento principal de los tiburones.
-            - **Nuestra herramienta:** Utiliza datos del satélite PACE de la NASA para mapear estas "praderas" de plancton, identificando las zonas con mayor abundancia de comida.
+            **Nuestra herramienta** utiliza las imágenes satelitales de clorofila para identificar estas áreas ricas en plancton, ayudándonos a predecir dónde es más probable que los tiburones encuentren comida.
             """
         )
 
     with video_col2:
-        st.subheader("Pista 2: Las Corrientes (Las Autopistas del Océano)")
+        st.subheader("Las corrientes, autopistas del océano")
         try:
-            video_file_currents = open('currents.webm', 'rb')
-            video_bytes_currents = video_file_currents.read()
-            st.video(video_bytes_currents)
+            # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
+            autoplay_video('currents.webm') 
             st.caption("Crédito: NASA/Goddard Space Flight Center Scientific Visualization Studio")
         except FileNotFoundError:
             st.error("No se encontró el archivo 'currents.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
@@ -189,10 +200,10 @@ with tab2:
             """
             Las **corrientes oceánicas** actúan como ríos y autopistas que transportan nutrientes y agrupan a las presas.
             - **¿Por qué es relevante?** Los tiburones son depredadores inteligentes. No gastan energía buscando al azar; utilizan las corrientes para viajar y patrullar zonas donde los remolinos y frentes oceánicos concentran a sus presas, como si fueran embudos.
-            - **Nuestra herramienta:** Emplea datos del satélite SWOT de la NASA para identificar estas estructuras dinámicas, prediciendo dónde se acumulará el alimento.
+            **Nuestra herramienta** emplea datos imágenes satelitales de la NASA para identificar estas rutas y puntos calientes, ayudándonos a predecir dónde es más probable que los tiburones patrullen en busca de alimento.
             """
         )
-        
+    
     st.markdown("---")
     
     st.header("¿Por Qué es Importante Encontrar a los Tiburones?")
