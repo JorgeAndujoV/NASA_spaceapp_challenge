@@ -1,56 +1,138 @@
-# --- Importaciones ---
+# app.py
+
 import streamlit as st
 import pandas as pd
-# Suponiendo que tienes una función para cargar tu modelo de TF
-# from your_model_utils import load_tf_model, get_environmental_data_for_point
+import numpy as np
+import folium
+from streamlit_folium import st_folium
+import time
+import datetime
 
-# Cargar el modelo (esto debería hacerse una sola vez)
-# tf_model = load_tf_model('path/to/your/model.h5')
+# =============================================================================
+# Page Configuration
+# =============================================================================
+st.set_page_config(
+    page_title="Apex-AI: Predictor Global de Hábitats de Tiburones",
+    page_icon="🦈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# =============================================================================
+# Data Loading (Use caching to speed up app)
+# =============================================================================
+# En un app real, cargarías los datos de predicción de tu modelo aquí.
+# Para este ejemplo, generaremos algunos datos falsos.
+@st.cache_data
+def load_data():
+    # Fake historical sightings data (for optional display)
+    sightings = pd.DataFrame({
+        'lat': np.random.uniform(-60, 60, 100), # Global distribution for world map
+        'lon': np.random.uniform(-180, 180, 100),
+        'species': np.random.choice(['Great White Shark', 'Tiger Shark', 'Whale Shark'], 100)
+    })
+    return sightings
 
-# --- Diseño de la Interfaz ---
-st.title("Análisis Interactivo de Hábitats 🦈")
+sightings_df = load_data()
 
-# Crear dos columnas
-col1, col2 = st.columns([3, 2]) # La columna del mapa es más ancha
+# =============================================================================
+# Título y Descripción General
+# =============================================================================
+st.title("🦈 Apex-AI: Predicción Global de Hábitats de Tiburones")
+st.markdown("Explora el mapa mundial, haz clic en cualquier punto del océano y selecciona una fecha para predecir la probabilidad de actividad de forrajeo de tiburones.")
 
-# --- Columna 1: Mapa General ---
+# =============================================================================
+# Diseño en Columnas
+# =============================================================================
+col1, col2 = st.columns([3, 2]) # Columna del mapa más ancha que la de controles/resultados
+
+# --- Columna 1: Mapa Interactivo Mundial ---
 with col1:
-    st.subheader("Mapa de Probabilidad General")
-    st.write("Aquí va tu mapa de calor (heatmap) de PyDeck o Folium.")
-    # Código para mostrar tu mapa...
-    # st.pydeck_chart(...)
+    st.subheader("Mapa Global Interactivo")
 
+    # Crear un mapa de Folium centrado en una vista global
+    m = folium.Map(location=[0, 0], zoom_start=2, control_scale=True)
 
-# --- Columna 2: Analizador de Puntos Específicos ("Cursor") ---
+    # Opcional: Añadir capas de avistamientos históricos
+    if st.session_state.get('show_sightings', False):
+        for idx, row in sightings_df.iterrows():
+            folium.CircleMarker(
+                location=[row['lat'], row['lon']],
+                radius=3,
+                color='red',
+                fill=True,
+                fill_color='red',
+                tooltip=f"Avistamiento: {row['species']}"
+            ).add_to(m)
+
+    # Renderizar el mapa de Folium en Streamlit y capturar clics
+    # La clave aquí es 'return_on_hover=True' para la interactividad de coordenadas
+    # Aunque la captura de clic directo se maneja con 'st_folium'
+    map_data = st_folium(
+        m,
+        height=600,
+        width="100%",
+        feature_group_to_add=None,
+        returned_objects=["last_clicked"], # Devuelve la última ubicación clicada
+        key="global_map" # Clave única para el componente Streamlit
+    )
+
+# --- Columna 2: Controles y Resultados de Predicción ---
 with col2:
-    st.subheader("Analizador de Coordenadas")
-    st.write("Introduce un punto y fecha para obtener una predicción.")
+    st.subheader("Análisis de Punto y Fecha")
 
-    # Inputs para el usuario
-    lat_input = st.number_input("Latitud", format="%.4f")
-    lon_input = st.number_input("Longitud", format="%.4f")
-    date_input = st.date_input("Fecha")
+    # Selector de fecha
+    selected_date = st.date_input("Selecciona una fecha para el análisis:", datetime.date.today())
 
-    # Botón para ejecutar la predicción
-    if st.button("Analizar Punto"):
-        # 1. Recolectar los datos para ese punto y fecha
-        # Esta función es algo que TU equipo debe construir.
-        # Debería obtener los datos de fitoplancton, corrientes, temperatura, etc.
-        # feature_vector = get_environmental_data_for_point(lat_input, lon_input, date_input)
+    st.markdown("---")
+    st.markdown("### Coordenadas del Punto Seleccionado:")
 
-        # 2. Usar el modelo de TensorFlow para predecir
-        # (Simulación - reemplaza con la llamada a tu modelo real)
-        # prediction_prob = tf_model.predict(feature_vector)[0][0]
-        prediction_prob = 0.85 # Valor de ejemplo
+    # Mostrar las coordenadas del último clic
+    clicked_lat = None
+    clicked_lon = None
 
-        # 3. Mostrar el resultado al usuario
-        st.write("---")
-        st.write("### Resultado del Análisis:")
+    if map_data and map_data["last_clicked"]:
+        clicked_lat = map_data["last_clicked"]["lat"]
+        clicked_lon = map_data["last_clicked"]["lng"]
+        st.write(f"**Latitud:** {clicked_lat:.4f}")
+        st.write(f"**Longitud:** {clicked_lon:.4f}")
+    else:
+        st.write("Haz clic en un punto del mapa para seleccionarlo.")
 
-        if prediction_prob > 0.6: # Umbral de decisión
-            st.success(f"HÁBITAT POSIBLE")
-            st.metric(label="Probabilidad de Forrajeo", value=f"{prediction_prob:.0%}")
+    # Botón de análisis (solo si hay un punto seleccionado)
+    if clicked_lat is not None and clicked_lon is not None:
+        if st.button("✨ Obtener Predicción"):
+            # --- Lógica de Predicción ---
+            # Aquí es donde integrarías tu modelo de TensorFlow
+            # 1. Obtener los datos ambientales (PACE, SWOT, etc.) para (clicked_lat, clicked_lon, selected_date)
+            #    Ejemplo: `environmental_features = get_environmental_data_for_point(clicked_lat, clicked_lon, selected_date)`
+
+            # 2. Usar tu modelo de TensorFlow para predecir la probabilidad
+            #    Ejemplo: `prediction_probability = your_tensorflow_model.predict(environmental_features)`
+
+            # --- SIMULACIÓN DE PREDICCIÓN (REEMPLAZA ESTO CON TU CÓDIGO REAL) ---
+            # Usamos un poco de aleatoriedad para simular diferentes probabilidades
+            np.random.seed(int(clicked_lat * 1000) + int(clicked_lon * 1000) + selected_date.day)
+            prediction_probability = np.random.uniform(0.1, 0.99) # Probabilidad aleatoria para demostración
+            # --- FIN SIMULACIÓN ---
+
+            st.write("---")
+            st.write("### Resultado de la Predicción:")
+
+            if prediction_probability > 0.6: # Umbral de ejemplo para "POSIBLE"
+                st.success(f"**¡HÁBITAT POSIBLE para forrajeo de tiburones!**")
+                st.metric(label="Probabilidad de Actividad", value=f"{prediction_probability:.0%}")
+                st.info("Condiciones favorables esperadas: Alta concentración de fitoplancton, corrientes oceánicas convergentes.") # Aquí añadirías los fenómenos climáticos relevantes
+            else:
+                st.warning(f"**HÁBITAT POCO PROBABLE**")
+                st.metric(label="Probabilidad de Actividad", value=f"{prediction_probability:.0%}")
+                st.info("Condiciones desfavorables esperadas: Baja productividad primaria, corrientes dispersas.") # Aquí añadirías los fenómenos climáticos relevantes
         else:
-            st.error(f"HÁBITAT POCO PROBABLE")
-            st.metric(label="Probabilidad de Forrajeo", value=f"{prediction_prob:.0%}")
+            st.info("Haz clic en 'Obtener Predicción' para ver el análisis.")
+    else:
+        st.info("Primero haz clic en un punto del mapa para seleccionarlo y luego podrás obtener la predicción.")
+
+    st.sidebar.markdown("---")
+    st.sidebar.header("Opciones de Visualización")
+    st.session_state['show_sightings'] = st.sidebar.checkbox("Mostrar Avistamientos Históricos (OBIS)", value=True)
+    # Aquí puedes añadir más checkboxes para capas de datos de PACE/SWOT si quieres visualizarlas globalmente
