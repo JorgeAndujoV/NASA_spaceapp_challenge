@@ -20,13 +20,6 @@ st.set_page_config(
     page_icon="🦈",
     layout="wide",
 )
-
-# =============================================================================
-# 2. ELIMINAMOS LA SIMULACIÓN DEL MODELO
-# =============================================================================
-# La función 'mock_model_predict' que generaba números aleatorios ha sido BORRADA.
-# Ahora usamos la función real que importamos de 'model.py'.
-
 # =============================================================================
 # 3. FUNCIONES AUXILIARES (Esta se queda igual)
 # =============================================================================
