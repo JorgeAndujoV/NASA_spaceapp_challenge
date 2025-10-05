@@ -85,63 +85,80 @@ with tab1:
     # --- LAYOUT DE DOS COLUMNAS ---
     map_col, results_col = st.columns([3, 2]) # El mapa ocupa más espacio
 
-    # --- COLUMNA 2: CONTROLES Y RESULTADOS (LO MOVEMOS ANTES DEL MAPA) ---
+    # --- COLUMNA 2: CONTROLES Y RESULTADOS ---
     with results_col:
         st.header("Panel de análisis")
-
-        # Selector de fecha
         st.date_input(
             "Selecciona mes y año:",
-            value=datetime.date(2025, 10, 5), # Fecha actual
+            value=datetime.date(2025, 10, 5),
             min_value=datetime.date(2020, 1, 1),
             max_value=datetime.date(2030, 12, 31),
             key='date_input'
         )
-
         st.markdown("---")
-
-        # Aquí mostraremos los resultados
+        # Creamos un espacio vacío que llenaremos después con los resultados
         results_placeholder = st.empty()
-
 
     # --- COLUMNA 1: MAPA INTERACTIVO ---
     with map_col:
-        # Definir una ubicación inicial para el mapa
-        # Si ya hay un clic guardado, centramos el mapa ahí. Si no, en el centro del mundo.
+        # 1. Decidir la vista inicial del mapa
         if st.session_state["last_clicked"]:
-            initial_location = [st.session_state["last_clicked"]["lat"], st.session_state["last_clicked"]["lng"]]
-            initial_zoom = 5 # Acercamos un poco el zoom al punto seleccionado
+            # Si ya hay un punto guardado, centramos el mapa ahí
+            lat = st.session_state["last_clicked"]["lat"]
+            lon = st.session_state["last_clicked"]["lng"]
+            location = [lat, lon]
+            zoom = 6 # Acercamos la vista
         else:
-            initial_location = [20, 0]
-            initial_zoom = 2.5
+            # Vista inicial por defecto
+            location = [20, 0]
+            zoom = 2.5
 
-        # Crear el mapa de Folium
-        m = folium.Map(location=initial_location, zoom_start=initial_zoom)
-        
-        # Renderizar el mapa y capturar el último clic
+        # 2. Crear el objeto de mapa
+        m = folium.Map(location=location, zoom_start=zoom)
+
+        # 3. ***** LA PARTE CLAVE CORREGIDA *****
+        # Si ya tenemos un punto guardado, calculamos su probabilidad Y DIBUJAMOS EL MARCADOR
+        if st.session_state["last_clicked"]:
+            lat = st.session_state["last_clicked"]["lat"]
+            lon = st.session_state["last_clicked"]["lng"]
+            date = st.session_state.date_input
+            
+            # Calcular probabilidad y detalles para el marcador
+            probability = mock_model_predict(lat, lon, date.month, date.year)
+            level, color, emoji = get_probability_details(probability)
+
+            # Crear el texto del popup
+            popup_text = f"""
+            <b>Ubicación Analizada</b><br>
+            Lat: {lat:.2f}, Lon: {lon:.2f}<br>
+            Probabilidad: <b>{probability:.0%} ({level})</b>
+            """
+            
+            # AÑADIR EL MARCADOR AL MAPA 'm' ANTES DE MOSTRARLO
+            folium.Marker(
+                location=[lat, lon],
+                popup=folium.Popup(popup_text, max_width=300),
+                icon=folium.Icon(color=color, icon="life-ring", prefix='fa')
+            ).add_to(m)
+
+        # 4. Renderizar el mapa y esperar un nuevo clic
         map_data = st_folium(m, height=600, width="100%", returned_objects=["last_clicked"])
 
-        # LÓGICA UNIFICADA: Si hay un clic, actualizar todo AHORA.
-        # Esto se ejecuta DESPUÉS de renderizar el mapa.
+        # 5. Si hay un nuevo clic, actualizar el estado y forzar la recarga
         if map_data and map_data["last_clicked"]:
-            # Guardamos el nuevo clic en el estado de la sesión
             st.session_state["last_clicked"] = map_data["last_clicked"]
-            
-            # Forzamos una nueva ejecución inmediata para que el mapa se recentre
             st.rerun()
 
-    # --- Lógica de resultados ---
-    # La movemos fuera de las columnas para que se ejecute después de procesar el clic
+    # --- LÓGICA DE RESULTADOS (esto se mantiene igual) ---
+    # Llenamos el panel de la derecha con la información del estado actual
     if st.session_state["last_clicked"]:
         lat = st.session_state["last_clicked"]["lat"]
         lon = st.session_state["last_clicked"]["lng"]
         date = st.session_state.date_input
         
-        # Calcular la probabilidad basado en el estado actual
         probability = mock_model_predict(lat, lon, date.month, date.year)
         level, color, emoji = get_probability_details(probability)
         
-        # Actualizar el panel de resultados usando el placeholder
         with results_placeholder.container():
             st.subheader(f"Resultado para el punto seleccionado:")
             st.metric(label=f"{emoji} Nivel de probabilidad", value=level)
