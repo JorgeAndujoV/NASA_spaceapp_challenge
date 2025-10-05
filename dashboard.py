@@ -78,7 +78,7 @@ st.title("¿Dónde están los tiburones? 🦈")
 st.markdown("Una herramienta para predecir hábitats de forrajeo de tiburones utilizando datos satelitales de la NASA.")
 
 # --- ESTRUCTURA DE PESTAÑAS PARA ORGANIZAR EL CONTENIDO ---
-tab1, tab2 = st.tabs(["🌎 Herramienta Predictiva", "🔬 La Ciencia Detrás del Modelo"])
+tab1, tab2 = st.tabs(["🌎 Herramienta predictiva", "🔬 La ciencia detrás del modelo"])
 
 # --- PESTAÑA 1: HERRAMIENTA PREDICTIVA (Tu código original - NO HA CAMBIADO) ---
 with tab1:
@@ -125,11 +125,11 @@ with tab1:
 
     # --- COLUMNA 2: CONTROLES Y RESULTADOS ---
     with results_col:
-        st.header("Panel de Análisis")
+        st.header("Panel de análisis")
 
         # Selector de fecha
         st.date_input(
-            "Selecciona Mes y Año:",
+            "Selecciona mes y año:",
             value=datetime.date(2025, 10, 5), # Fecha actual
             min_value=datetime.date(2020, 1, 1),
             max_value=datetime.date(2030, 12, 31),
@@ -148,12 +148,12 @@ with tab1:
             probability = mock_model_predict(lat, lon, date.month, date.year)
             level, color, emoji = get_probability_details(probability)
             
-            st.subheader(f"Resultado para el Punto Seleccionado:")
-            st.metric(label=f"{emoji} Nivel de Probabilidad", value=level)
-            st.metric(label="Valor de Probabilidad", value=f"{probability:.2%}")
+            st.subheader(f"Resultado para el punto seleccionado:")
+            st.metric(label=f"{emoji} Nivel de probabilidad", value=level)
+            st.metric(label="Valor de probabilidad", value=f"{probability:.2%}")
             st.progress(probability)
             
-            with st.expander("Detalles de la Entrada"):
+            with st.expander("Detalles de la entrada"):
                 st.write(f"**Latitud:** {lat:.4f}")
                 st.write(f"**Longitud:** {lon:.4f}")
                 st.write(f"**Fecha:** {date.strftime('%B %Y')}")
