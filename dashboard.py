@@ -60,16 +60,14 @@ if "last_clicked" not in st.session_state:
 
 # --- FUNCIÓN AUXILIAR PARA VIDEOS CON AUTOPLAY Y LOOP ---
 # La he movido aquí para que esté disponible para la pestaña 2
-def autoplay_video(video_file_path: str):
-    with open(video_file_path, "rb") as f:
-        data = f.read()
-        b64 = base64.b64encode(data).decode()
-        md = f"""
-        <video controls loop autoplay="true" muted="true" style="width:100%;">
-            <source src="data:video/webm;base64,{b64}" type="video/webm">
-        </video>
-        """
-        st.markdown(md, unsafe_allow_html=True)
+def autoplay_video(video_url: str):
+    # Simplemente genera el HTML con la URL del video
+    md = f"""
+    <video controls loop autoplay="true" muted="true" style="width:100%;">
+        <source src="{video_url}" type="video/webm">
+    </video>
+    """
+    st.markdown(md, unsafe_allow_html=True)
 
 # =============================================================================
 # 5. CONSTRUCCIÓN DE LA INTERFAZ GRÁFICA (UI)
@@ -174,7 +172,7 @@ with tab2:
         st.subheader("El Plancton, base de la cadena alimenticia")
         try:
             # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
-            autoplay_video('plancton.webm') 
+            autoplay_video('https://raw.githubusercontent.com/JorgeAndujoV/NASA_spaceapp_challenge/main/plancton.webm') 
             st.caption("Crédito: MIT Darwin Project, ECCO2, MITgcm")
         except FileNotFoundError:
             st.error("No se encontró el archivo 'plancton.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
@@ -191,7 +189,7 @@ with tab2:
         st.subheader("Las corrientes, autopistas del océano")
         try:
             # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
-            autoplay_video('currents.webm') 
+            autoplay_video('https://raw.githubusercontent.com/JorgeAndujoV/NASA_spaceapp_challenge/main/currents.webm') 
             st.caption("Crédito: NASA/Goddard Space Flight Center Scientific Visualization Studio")
         except FileNotFoundError:
             st.error("No se encontró el archivo 'currents.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
