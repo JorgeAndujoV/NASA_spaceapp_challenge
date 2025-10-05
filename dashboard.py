@@ -204,25 +204,25 @@ with tab2:
     
     st.markdown("---")
     
-    st.header("¿Por Qué es Importante Encontrar a los Tiburones?")
+    st.header("¿Por qué es importante encontrar a los tiburones?")
     st.write(
         """
         Encontrar a los tiburones no es solo para satisfacer nuestra curiosidad. Los tiburones son **depredadores tope** y, como tales, son **bioindicadores cruciales de la salud del océano**.
         """
     )
     
-    st.subheader("Indicadores de Ecosistemas Saludables")
+    st.subheader("Indicadores de ecosistemas saludables")
     st.markdown(
         """
         Una población saludable de tiburones en una zona indica que toda la cadena alimenticia debajo de ellos es robusta y está en equilibrio. Si los tiburones desaparecen de un área, puede ser una señal de alerta temprana de problemas más graves como la sobrepesca, la contaminación o los efectos del cambio climático en los niveles más bajos del ecosistema.
         """
     )
     
-    st.subheader("¿Qué Problema Resolvemos?")
+    st.subheader("¿Qué problema estamos resolviendo?")
     st.markdown(
         """
         - **Conservación Eficiente:** Al predecir sus hábitats de alimentación, podemos ayudar a diseñar **Áreas Marinas Protegidas (AMP)** que sean dinámicas y más efectivas, protegiendo los lugares donde los tiburones son más vulnerables.
-        - **Mitigación de la Pesca Incidental (Bycatch):** Nuestra herramienta podría alertar a las flotas pesqueras sobre zonas de alta probabilidad de actividad de tiburones, ayudando a reducir el número de tiburones capturados accidentalmente.
         - **Monitoreo Climático:** Rastrear cómo cambian estos hábitats a lo largo del tiempo nos proporciona datos valiosos sobre cómo el cambio climático está impactando la vida marina y la distribución de especies.
+        - **Mitigación de la Pesca Incidental:** Nuestra herramienta podría alertar a las flotas pesqueras sobre zonas de alta probabilidad de actividad de tiburones, ayudando a reducir el número de tiburones capturados accidentalmente.
         """
     )
