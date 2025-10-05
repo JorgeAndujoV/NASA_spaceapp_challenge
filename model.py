@@ -24,7 +24,7 @@ def _load_model_once():
     
     try:
         # Ruta específica de tu modelo
-        MODEL_DIR = 'shark_model_optimized_v3.0.0_20251005_192236'
+        MODEL_DIR = 'shark_model_optimized_v3.0.0_20251005_203403'
         
         print("Cargando modelo de predicción de tiburones...")
         
