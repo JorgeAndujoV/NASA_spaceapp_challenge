@@ -139,7 +139,7 @@ with tab1:
         lon = st.session_state["last_clicked"]["lng"]
         date = st.session_state.date_input
         
-        probability = mock_model_predict(lat, lon, date.month, date.year)
+        probability = mock_model_predict(lat, lon, date.month, date.year) * random.uniform(0.6, 1)
         level, color, emoji = get_probability_details(probability)
         
         with results_placeholder.container():
