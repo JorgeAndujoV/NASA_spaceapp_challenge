@@ -65,7 +65,7 @@ if "last_clicked" not in st.session_state:
 # =============================================================================
 
 # --- TÍTULO ---
-st.title("🦈 Predictor de Hábitat de Tiburones")
+st.title("¿Dónde están los tiburones? 🦈")
 st.markdown("Haz clic en cualquier punto del mapa y selecciona una fecha para analizar la probabilidad de forrajeo.")
 
 # --- LAYOUT DE DOS COLUMNAS ---
