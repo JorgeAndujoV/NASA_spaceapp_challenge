@@ -3,7 +3,7 @@ import joblib
 import json
 import os
 import tensorflow as tf
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 from sklearn.preprocessing import StandardScaler
 import hashlib
 
@@ -219,7 +219,7 @@ def enhanced_shark_predict(lat: float, lon: float, month: int, year: int) -> dic
     return result
 
 # EJEMPLOS DE USO
-if _name_ == "_main_":
+if __name__ == "__main__":
     # Ejemplo de uso básico (igual que tu función original)
     print("PREDICCIONES BÁSICAS:")
     test_cases = [
