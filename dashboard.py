@@ -237,43 +237,39 @@ with tab2:
         - **Mitigación de la pesca incidental:** Nuestra herramienta podría alertar a las flotas pesqueras sobre zonas de alta probabilidad de actividad de tiburones, ayudando a reducir el número de tiburones capturados accidentalmente.
         """
     )
-# --- PESTAÑA 3: NUESTRA METODOLOGÍA (EL PROCESO TÉCNICO) ---
+# --- PESTAÑA 3: NUESTRA METODOLOGÍA (VERSIÓN CORREGIDA) ---
 with tab3:
     st.header("Datos satelitales y machine learning")
     st.write(
         """
-        Nuestro primer objetivo fue transformar datos crudos del océano en una predicción útil y accesible. 
-        Para lograrlo, construimos un pipeline de Machine Learning de dos etapas que combina el aprendizaje no supervisado 
-        para entender el ambiente, y el aprendizaje supervisado para predecir la presencia de tiburones.
+        Nuestro primer objetivo fue transformar datos crudos del océano en una predicción útil y accesible. Para lograrlo, construimos un pipeline de Machine Learning de dos etapas que combina el aprendizaje no supervisado para entender el ambiente, y el aprendizaje supervisado para predecir la presencia de tiburones.
         """
     )
-
     st.markdown("---")
 
-    # --- Usamos columnas para organizar la explicación con imágenes ---
-    col_texto_1, col_img_1 = st.columns([2, 2])
+    # --- CAMBIO CLAVE: Definimos UN SOLO par de columnas para las secciones 1 y 2 ---
+    img_col, text_col = st.columns([2, 3]) # Damos un poco más de espacio al texto
 
-    with col_texto_1:
+    # --- Columna Izquierda: Imagen ---
+    with img_col:
+        st.image(
+            'enesep.png', # Asegúrate de que el nombre del archivo sea correcto
+            caption="Visualización de los clústeres oceanográficos identificados por nuestro modelo, comparación enero-septiembre de dos años."
+        )
+
+    # --- Columna Derecha: Texto de las secciones 1 y 2 ---
+    with text_col:
         st.subheader("1. Procesamiento de datos de la NASA")
         st.markdown(
             """
-            Comenzamos con bases de datos de imagenes satelitales de la NASA que capturan variables oceánicas clave como la temperatura del mar, la salinidad, la clorofila (indicador de plancton) y las corrientes oceánicas. 
-        
+            Comenzamos con bases de datos de imagenes satelitales de la NASA que capturan variables oceánicas clave como la temperatura del mar, la salinidad, la clorofila (indicador de plancton) y las corrientes oceánicas.
             """
         )
-    
-    col_img_2, col_texto_2 = st.columns([2, 2])
-    
-    with col_img_2:
-        # **AQUÍ ES DONDE PONES TU MEJOR IMAGEN DE CLÚSTERES**
-        st.image('enesep.png', caption="Visualización de los clústeres oceanográficos identificados por nuestro modelo, comparación enero septiembre dos años.")
-
-    with col_texto_2:
+        
         st.subheader("2. Clústering para entender el océano")
         st.markdown(
             """
-            Para que nuestro modelo pudiera entender el océano, primero necesitábamos enseñarle a reconocer diferentes "tipos" de ambientes. 
-            Analizamos varios algoritmos de clustering y seleccionamos aquel cuyas agrupaciones mostraron una fuerte correlación con las clasificaciones oceanográficas de la NASA.
+            Para que nuestro modelo pudiera entender el océano, primero necesitábamos enseñarle a reconocer diferentes "tipos" de ambientes. Analizamos varios algoritmos de clustering y seleccionamos aquel cuyas agrupaciones mostraron una fuerte correlación con las clasificaciones oceanográficas de la NASA.
 
             Cada clúster representa una "etiqueta" para un ecosistema con características únicas, permitiéndonos crear nuestros propios datasets de entrenamiento.
             """
@@ -281,17 +277,26 @@ with tab3:
 
     st.markdown("---")
 
+    # --- CAMBIO CLAVE: Separamos el texto de la fórmula para un formato perfecto ---
     st.subheader("3. Predicción de hábitats de tiburones")
+    
+    # Texto ANTES de la fórmula
     st.markdown(
         """
-    Con el océano ya etiquetado por clústeres, entrenamos una **red neuronal**. Esta fórmula representa el **marco teórico** de nuestro enfoque, donde la probabilidad de un tiburón se calcula a partir de la probabilidad de cada tipo de ambiente:
+        Con el océano ya etiquetado por clústeres, entrenamos una **red neuronal**. Esta fórmula representa el **marco teórico** de nuestro enfoque, donde la probabilidad de un tiburón se calcula a partir de la probabilidad de cada tipo de ambiente:
+        """
+    )
 
-    $$
-    P(\text{shark}|x) = \sum_{k=1}^{K} P(\text{cluster} = k|x) P(\text{shark}|\text{cluster} = k, \text{time})
-    $$
+    # La fórmula con st.latex() para que se vea perfecta
+    st.latex(r'''
+        P(\text{shark}|x) = \sum_{k=1}^{K} P(\text{cluster} = k|x) P(\text{shark}|\text{cluster} = k, \text{time})
+    ''')
 
-    Nuestra red neuronal es la **implementación práctica y potente** que resuelve esta ecuación. El modelo aprendió la compleja relación entre las características ambientales de cada clúster y la probabilidad de encontrar tiburones en esas zonas.
+    # Texto DESPUÉS de la fórmula
+    st.markdown(
+        """
+        Nuestra **red neuronal** es la implementación que resuelve esta ecuación. El modelo aprendió la relación entre las características ambientales de cada clúster y la probabilidad de encontrar tiburones en esas zonas.
 
-    La predicción final es una **"predicción proxy"** inteligente. El modelo utiliza patrones de los clústeres además de conocimiento biológico sobre el comportamiento de los tiburones y las características del mar para estimar dónde es más probable que se encuentren.
-    """
+        La predicción final es una **"predicción proxy"** inteligente. El modelo utiliza patrones de los clústeres además de conocimiento biológico sobre el comportamiento de los tiburones y las características del mar para estimar dónde es más probable que se encuentren.
+        """
     )
