@@ -236,7 +236,7 @@ with tab3:
     img_col_tag, text_col_tag = st.columns([2, 3])
     with img_col_tag:
         st.image(
-            'static_images/conceptual_tag.png',
+            'tag.jpg',
             use_container_width=True,
             caption="Propuesta de tag satelital avanzado."
         )
