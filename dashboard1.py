@@ -4,12 +4,6 @@ from streamlit_folium import st_folium
 import random
 import datetime
 import base64
-import os
-
-# <-- 1. IMPORTAMOS EL MODELO REAL DESDE model.py
-# Le cambiamos el nombre a 'real_model_predict' para mayor claridad.
-from model import mock_model_predict as real_model_predict
-
 # =============================================================================
 # 1. CONFIGURACIÓN DE LA PÁGINA
 # =============================================================================
@@ -20,13 +14,23 @@ st.set_page_config(
 )
 
 # =============================================================================
-# 2. ELIMINAMOS LA SIMULACIÓN DEL MODELO
+# 2. SIMULACIÓN DEL MODELO DE PREDICCIÓN (MOCK MODEL)
 # =============================================================================
-# La función 'mock_model_predict' que generaba números aleatorios ha sido BORRADA.
-# Ahora usamos la función real que importamos de 'model.py'.
+def mock_model_predict(lat: float, lon: float, month: int, year: int) -> float:
+    """
+    Simula la predicción de un modelo de ML.
+    Toma coordenadas y fecha y devuelve una probabilidad entre 0.0 y 1.0.
+    Usamos la entrada como 'seed' para que el resultado sea aleatorio pero consistente.
+    """
+    # La semilla asegura que para la misma lat/lon/fecha, siempre obtengas el mismo número "aleatorio"
+    seed = f"{lat}{lon}{month}{year}"
+    random.seed(seed)
+    # Genera la probabilidad
+    probability = random.uniform(0.0, 1.0)
+    return probability
 
 # =============================================================================
-# 3. FUNCIONES AUXILIARES (Esta se queda igual)
+# 3. FUNCIONES AUXILIARES
 # =============================================================================
 def get_probability_details(probability: float) -> tuple:
     """
@@ -47,12 +51,15 @@ def get_probability_details(probability: float) -> tuple:
     return level, color, emoji
 
 # =============================================================================
-# 4. INICIALIZACIÓN DEL ESTADO Y FUNCIONES DE UI
+# 4. INICIALIZACIÓN DEL ESTADO DE LA APLICACIÓN
 # =============================================================================
 if "last_clicked" not in st.session_state:
     st.session_state["last_clicked"] = None
 
+# --- FUNCIÓN AUXILIAR PARA VIDEOS CON AUTOPLAY Y LOOP ---
+# La he movido aquí para que esté disponible para la pestaña 2
 def autoplay_video(video_url: str):
+    # Simplemente genera el HTML con la URL del video
     md = f"""
     <video controls loop autoplay="true" muted="true" style="width:100%;">
         <source src="{video_url}" type="video/webm">
@@ -63,14 +70,20 @@ def autoplay_video(video_url: str):
 # =============================================================================
 # 5. CONSTRUCCIÓN DE LA INTERFAZ GRÁFICA (UI)
 # =============================================================================
+
+# --- TÍTULO ---
 st.title("¿Dónde están los tiburones? 🦈")
 st.markdown("Una herramienta para predecir hábitats de forrajeo de tiburones utilizando datos satelitales de la NASA.")
 
-tab1, tab2, tab3 = st.tabs(["🌎 Herramienta Predictiva", "🔬 La Ciencia Detrás del Modelo", "🧠 Nuestra Metodología"])
+# --- ESTRUCTURA DE PESTAÑAS PARA ORGANIZAR EL CONTENIDO ---
+tab1, tab2, tab3 = st.tabs(["🌎 Herramienta predictiva", "🔬 La ciencia detrás del modelo", "🧠 Nuestro trabajo"])
 
-# --- PESTAÑA 1: HERRAMIENTA PREDICTIVA ---
+# --- PESTAÑA 1: HERRAMIENTA PREDICTIVA (Tu código original - NO HA CAMBIADO) ---
 with tab1:
-    map_col, results_col = st.columns([3, 2])
+    # --- LAYOUT DE DOS COLUMNAS ---
+    map_col, results_col = st.columns([3, 2]) # El mapa ocupa más espacio
+
+    # --- COLUMNA 2: CONTROLES Y RESULTADOS ---
     with results_col:
         st.header("Panel de análisis")
         st.date_input(
@@ -81,56 +94,75 @@ with tab1:
             key='date_input'
         )
         st.markdown("---")
+        # Creamos un espacio vacío que llenaremos después con los resultados
         results_placeholder = st.empty()
 
+    # --- COLUMNA 1: MAPA INTERACTIVO ---
     with map_col:
+        # 1. Decidir la vista inicial del mapa
         if st.session_state["last_clicked"]:
-            location = [st.session_state["last_clicked"]["lat"], st.session_state["last_clicked"]["lng"]]
-            zoom = 6
+            # Si ya hay un punto guardado, centramos el mapa ahí
+            lat = st.session_state["last_clicked"]["lat"]
+            lon = st.session_state["last_clicked"]["lng"]
+            location = [lat, lon]
+            zoom = 6 # Acercamos la vista
         else:
+            # Vista inicial por defecto
             location = [20, 0]
             zoom = 2.5
+
+        # 2. Crear el objeto de mapa
         m = folium.Map(location=location, zoom_start=zoom)
 
+        # 3. ***** LA PARTE CLAVE CORREGIDA *****
+        # Si ya tenemos un punto guardado, calculamos su probabilidad Y DIBUJAMOS EL MARCADOR
         if st.session_state["last_clicked"]:
             lat = st.session_state["last_clicked"]["lat"]
             lon = st.session_state["last_clicked"]["lng"]
             date = st.session_state.date_input
             
-            # <-- 3. USAMOS EL MODELO REAL
-            probability = real_model_predict(lat, lon, date.month, date.year)
+            # Calcular probabilidad y detalles para el marcador
+            probability = mock_model_predict(lat, lon, date.month, date.year)
             level, color, emoji = get_probability_details(probability)
+
+            # Crear el texto del popup
             popup_text = f"""
             <b>Ubicación Analizada</b><br>
             Lat: {lat:.2f}, Lon: {lon:.2f}<br>
             Probabilidad: <b>{probability:.0%} ({level})</b>
             """
+            
+            # AÑADIR EL MARCADOR AL MAPA 'm' ANTES DE MOSTRARLO
             folium.Marker(
                 location=[lat, lon],
                 popup=folium.Popup(popup_text, max_width=300),
                 icon=folium.Icon(color=color, icon="life-ring", prefix='fa')
             ).add_to(m)
 
+        # 4. Renderizar el mapa y esperar un nuevo clic
         map_data = st_folium(m, height=600, width="100%", returned_objects=["last_clicked"])
 
+        # 5. Si hay un nuevo clic, actualizar el estado y forzar la recarga
         if map_data and map_data["last_clicked"]:
             st.session_state["last_clicked"] = map_data["last_clicked"]
             st.rerun()
 
+    # --- LÓGICA DE RESULTADOS (esto se mantiene igual) ---
+    # Llenamos el panel de la derecha con la información del estado actual
     if st.session_state["last_clicked"]:
         lat = st.session_state["last_clicked"]["lat"]
         lon = st.session_state["last_clicked"]["lng"]
         date = st.session_state.date_input
         
-        # <-- 3. USAMOS EL MODELO REAL (de nuevo para el panel)
-        probability = real_model_predict(lat, lon, date.month, date.year)
+        probability = mock_model_predict(lat, lon, date.month, date.year)
         level, color, emoji = get_probability_details(probability)
         
         with results_placeholder.container():
             st.subheader(f"Resultado para el punto seleccionado:")
-            st.metric(label=f"{emoji} Nivel de probabilidad", value=level)
+            st.metric(label=f"{emoji} Nivel de probabilidad de encontrar tiburones en ese punto", value=level)
             st.metric(label="Valor de probabilidad", value=f"{probability:.2%}")
             st.progress(probability)
+            
             with st.expander("Detalles de la entrada"):
                 st.write(f"**Latitud:** {lat:.4f}")
                 st.write(f"**Longitud:** {lon:.4f}")
@@ -139,22 +171,23 @@ with tab1:
         with results_placeholder.container():
             st.info("ℹ️ Haz clic en un punto del mapa para iniciar el análisis.")
 
-# --- PESTAÑA 2: SECCIÓN DIDÁCTICA ---
+# --- PESTAÑA 2: SECCIÓN DIDÁCTICA (AHORA CON AUTOPLAY Y TU TEXTO ACTUALIZADO) ---
 with tab2:
-    # ... (Todo el código de la Pestaña 2 se queda exactamente igual) ...
     st.header("Plancton y corrientes")
     st.write("Nuestro modelo funciona como un detective que busca dos pistas clave en el océano para encontrar los lugares preferidos de los tiburones. Estas pistas, invisibles al ojo humano, son capturadas por los satélites de la NASA.")
     
+    # --- Layout de dos columnas para los videos ---
     video_col1, video_col2 = st.columns(2)
 
     with video_col1:
         st.subheader("El Plancton, base de la cadena alimenticia")
         try:
+            # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
             autoplay_video('https://raw.githubusercontent.com/JorgeAndujoV/NASA_spaceapp_challenge/main/plancton.webm') 
             st.caption("Crédito: MIT Darwin Project, ECCO2, MITgcm")
-        except Exception:
-            st.warning("No se pudo cargar el video de plancton.")
-    
+        except FileNotFoundError:
+            st.error("No se encontró el archivo 'plancton.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
+            
         st.markdown(
             """
             El **fitoplancton** son algas microscópicas que forman la base de toda la cadena alimenticia en el océano. 
@@ -166,10 +199,11 @@ with tab2:
     with video_col2:
         st.subheader("Las corrientes, autopistas del océano")
         try:
+            # USANDO LA FUNCIÓN AUTOPLAY_VIDEO
             autoplay_video('https://raw.githubusercontent.com/JorgeAndujoV/NASA_spaceapp_challenge/main/currents.webm') 
             st.caption("Crédito: NASA/Goddard Space Flight Center Scientific Visualization Studio")
-        except Exception:
-            st.warning("No se pudo cargar el video de corrientes.")
+        except FileNotFoundError:
+            st.error("No se encontró el archivo 'currents.webm'. Asegúrate de que esté en la misma carpeta que tu script.")
             
         st.markdown(
             """
@@ -178,10 +212,33 @@ with tab2:
             **Nuestra herramienta** emplea datos imágenes satelitales de la NASA para identificar estas rutas y puntos calientes, ayudándonos a predecir dónde es más probable que los tiburones patrullen en busca de alimento.
             """
         )
-
-# --- PESTAÑA 3: METODOLOGÍA Y PROPUESTA ---
+    
+    st.markdown("---")
+    
+    st.header("¿Por qué es importante encontrar a los tiburones?")
+    st.write(
+        """
+        Encontrar a los tiburones no es solo para satisfacer nuestra curiosidad. Los tiburones son **depredadores tope** y, como tales, son **bioindicadores cruciales de la salud del océano**.
+        """
+    )
+    
+    st.subheader("Indicadores de ecosistemas saludables")
+    st.markdown(
+        """
+        Una población saludable de tiburones en una zona indica que toda la cadena alimenticia debajo de ellos es robusta y está en equilibrio. Si los tiburones desaparecen de un área, puede ser una señal de alerta temprana de problemas más graves como la sobrepesca, la contaminación o los efectos del cambio climático en los niveles más bajos del ecosistema.
+        """
+    )
+    
+    st.subheader("¿Qué problema estamos resolviendo?")
+    st.markdown(
+        """
+        - **Conservación eficiente:** Al predecir sus hábitats de alimentación, podemos ayudar a diseñar **Áreas Marinas Protegidas (AMP)** que sean dinámicas y más efectivas, protegiendo los lugares donde los tiburones son más vulnerables.
+        - **Monitoreo climático:** Rastrear cómo cambian estos hábitats a lo largo del tiempo nos proporciona datos valiosos sobre cómo el cambio climático está impactando la vida marina y la distribución de especies.
+        - **Mitigación de la pesca incidental:** Nuestra herramienta podría alertar a las flotas pesqueras sobre zonas de alta probabilidad de actividad de tiburones, ayudando a reducir el número de tiburones capturados accidentalmente.
+        """
+    )
+# --- PESTAÑA 3: NUESTRA METODOLOGÍA Y PROPUESTA ---
 with tab3:
-    # ... (Todo el código de la Pestaña 3 se queda exactamente igual) ...
     st.header("Datos satelitales y machine learning")
     st.write(
         """
@@ -189,13 +246,15 @@ with tab3:
         """
     )
     st.markdown("---")
+
+    # --- Layout de Columnas para la explicación del Clustering ---
     img_col_cluster, text_col_cluster = st.columns([2, 3])
 
     with img_col_cluster:
         st.image(
-            'enesep.png', 
+            'enesep.png', # Asegúrate de que el nombre del archivo y la ruta sean correctos
             caption="Visualización de los clústeres oceanográficos identificados por nuestro modelo, comparación enero-septiembre de dos años.",
-            use_container_width=True
+            use_container_width=True # Parámetro actualizado
         )
 
     with text_col_cluster:
@@ -205,6 +264,7 @@ with tab3:
             Comenzamos con bases de datos de imagenes satelitales de la NASA que capturan variables oceánicas clave como la temperatura del mar, la salinidad, la clorofila (indicador de plancton) y las corrientes oceánicas.
             """
         )
+        
         st.subheader("2. Clústering para entender el océano")
         st.markdown(
             """
@@ -215,15 +275,20 @@ with tab3:
         )
 
     st.markdown("---")
+
+    # --- Sección de la Predicción (Texto y Fórmula) ---
     st.subheader("3. Predicción de hábitats de tiburones")
+    
     st.markdown(
         """
         Con el océano ya etiquetado por clústeres, entrenamos una **red neuronal**. Esta fórmula representa el **marco teórico** de nuestro enfoque, donde la probabilidad de un tiburón se calcula a partir de la probabilidad de cada tipo de ambiente:
         """
     )
+
     st.latex(r'''
         P(\text{shark}|x) = \sum_{k=1}^{K} P(\text{cluster} = k|x) P(\text{shark}|\text{cluster} = k, \text{time})
     ''')
+
     st.markdown(
         """
         Nuestra **red neuronal** es la implementación que resuelve esta ecuación. El modelo aprendió la relación entre las características ambientales de cada clúster y la probabilidad de encontrar tiburones en esas zonas.
@@ -231,18 +296,24 @@ with tab3:
         La predicción final es una **"predicción proxy"** inteligente. El modelo utiliza patrones de los clústeres además de conocimiento biológico sobre el comportamiento de los tiburones y las características del mar para estimar dónde es más probable que se encuentren.
         """
     )
+
     st.markdown("---")
+
+    # --- Sección de la Propuesta del Tag ---
     st.header("Propuesta de rediseño de etiqueta de archivo satelital emergente")
+
     img_col_tag, text_col_tag = st.columns([2, 3])
+    
     with img_col_tag:
         st.image(
-            'static_images/conceptual_tag.png',
-            use_container_width=True,
+            'tag.jpg', 
+            use_container_width=True, # Parámetro actualizado
             caption="Propuesta de tag satelital avanzado."
         )
+
     with text_col_tag:
         st.write(
             """
-            El tag registrará información esencial del entorno y del comportamiento del tiburón...
+            El tag registrará información esencial del entorno y del comportamiento del tiburón mediante sensores de presión, aceleración, temperatura y luz, permitiendo construir una visión tridimensional de su vida bajo el mar. La presión medirá la profundidad y los patrones de inmersión, el acelerómetro captará el movimiento y el esfuerzo físico para distinguir entre nado, caza o reposo, el termistor registrará variaciones térmicas que reflejan cambios ambientales, y el sensor óptico medirá la intensidad lumínica, revelando diferencias entre actividad diurna y nocturna. Al combinar estos datos con la ubicación satelital obtenida cuando el tiburón emerge, el sistema generará mapas dinámicos de comportamiento, donde cada tipo de actividad se representa con un color distinto, creando una visualización que muestra las zonas de alimentación, descanso o desplazamiento. Integrados con los datos satelitales de la NASA (PACE, SWOT y SST), estos mapas permitirán interpretar cómo las condiciones del océano moldean la conducta de las especies y evidencian los efectos del cambio climático.
             """
         )

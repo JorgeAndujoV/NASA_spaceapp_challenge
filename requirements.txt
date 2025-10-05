@@ -3,3 +3,6 @@ pandas
 numpy
 folium
 streamlit-folium
+tensorflow
+scikit-learn
+joblib
