@@ -1,138 +1,148 @@
 # app.py
 
 import streamlit as st
-import pandas as pd
-import numpy as np
 import folium
 from streamlit_folium import st_folium
-import time
+import random
 import datetime
 
 # =============================================================================
-# Page Configuration
+# 1. CONFIGURACIÓN DE LA PÁGINA
 # =============================================================================
 st.set_page_config(
-    page_title="Apex-AI: Predictor Global de Hábitats de Tiburones",
+    page_title="Predictor de Hábitat de Tiburones",
     page_icon="🦈",
     layout="wide",
-    initial_sidebar_state="expanded"
 )
 
 # =============================================================================
-# Data Loading (Use caching to speed up app)
+# 2. SIMULACIÓN DEL MODELO DE PREDICCIÓN (MOCK MODEL)
 # =============================================================================
-# En un app real, cargarías los datos de predicción de tu modelo aquí.
-# Para este ejemplo, generaremos algunos datos falsos.
-@st.cache_data
-def load_data():
-    # Fake historical sightings data (for optional display)
-    sightings = pd.DataFrame({
-        'lat': np.random.uniform(-60, 60, 100), # Global distribution for world map
-        'lon': np.random.uniform(-180, 180, 100),
-        'species': np.random.choice(['Great White Shark', 'Tiger Shark', 'Whale Shark'], 100)
-    })
-    return sightings
-
-sightings_df = load_data()
-
-# =============================================================================
-# Título y Descripción General
-# =============================================================================
-st.title("🦈 Apex-AI: Predicción Global de Hábitats de Tiburones")
-st.markdown("Explora el mapa mundial, haz clic en cualquier punto del océano y selecciona una fecha para predecir la probabilidad de actividad de forrajeo de tiburones.")
+# ESTA ES LA FUNCIÓN QUE DEBERÁS REEMPLAZAR CON TU MODELO REAL
+def mock_model_predict(lat: float, lon: float, month: int, year: int) -> float:
+    """
+    Simula la predicción de un modelo de ML.
+    Toma coordenadas y fecha y devuelve una probabilidad entre 0.0 y 1.0.
+    Usamos la entrada como 'seed' para que el resultado sea aleatorio pero consistente.
+    """
+    # La semilla asegura que para la misma lat/lon/fecha, siempre obtengas el mismo número "aleatorio"
+    seed = f"{lat}{lon}{month}{year}"
+    random.seed(seed)
+    # Genera la probabilidad
+    probability = random.uniform(0.0, 1.0)
+    return probability
 
 # =============================================================================
-# Diseño en Columnas
+# 3. FUNCIONES AUXILIARES
 # =============================================================================
-col1, col2 = st.columns([3, 2]) # Columna del mapa más ancha que la de controles/resultados
+def get_probability_details(probability: float) -> tuple:
+    """
+    Categoriza la probabilidad en niveles y asigna un color y emoji.
+    """
+    if probability < 0.33:
+        level = "Baja"
+        color = "green"
+        emoji = "🟢"
+    elif probability < 0.66:
+        level = "Media"
+        color = "orange"
+        emoji = "🟠"
+    else:
+        level = "Alta"
+        color = "red"
+        emoji = "🔴"
+    return level, color, emoji
 
-# --- Columna 1: Mapa Interactivo Mundial ---
-with col1:
-    st.subheader("Mapa Global Interactivo")
+# =============================================================================
+# 4. INICIALIZACIÓN DEL ESTADO DE LA APLICACIÓN
+# =============================================================================
+# 'st.session_state' se usa para guardar información entre interacciones del usuario.
+if "last_clicked" not in st.session_state:
+    st.session_state["last_clicked"] = None
 
+# =============================================================================
+# 5. CONSTRUCCIÓN DE LA INTERFAZ GRÁFICA (UI)
+# =============================================================================
+
+# --- TÍTULO ---
+st.title("🦈 Predictor de Hábitat de Tiburones")
+st.markdown("Haz clic en cualquier punto del mapa y selecciona una fecha para analizar la probabilidad de forrajeo.")
+
+# --- LAYOUT DE DOS COLUMNAS ---
+map_col, results_col = st.columns([3, 2]) # El mapa ocupa más espacio
+
+# --- COLUMNA 1: MAPA INTERACTIVO ---
+with map_col:
     # Crear un mapa de Folium centrado en una vista global
-    m = folium.Map(location=[0, 0], zoom_start=2, control_scale=True)
+    m = folium.Map(location=[20, 0], zoom_start=2.5)
 
-    # Opcional: Añadir capas de avistamientos históricos
-    if st.session_state.get('show_sightings', False):
-        for idx, row in sightings_df.iterrows():
-            folium.CircleMarker(
-                location=[row['lat'], row['lon']],
-                radius=3,
-                color='red',
-                fill=True,
-                fill_color='red',
-                tooltip=f"Avistamiento: {row['species']}"
-            ).add_to(m)
+    # Si hay un punto seleccionado, procesarlo y mostrarlo
+    if st.session_state["last_clicked"]:
+        lat = st.session_state["last_clicked"]["lat"]
+        lon = st.session_state["last_clicked"]["lng"]
+        
+        # Obtener la fecha del selector en la otra columna
+        date_input = st.session_state.get('date_input', datetime.date.today())
+        month = date_input.month
+        year = date_input.year
+        
+        # Llamar al modelo para obtener la predicción
+        probability = mock_model_predict(lat, lon, month, year)
+        level, color, emoji = get_probability_details(probability)
+        
+        # Crear un marcador en el mapa
+        popup_text = f"""
+        <b>Ubicación Analizada</b><br>
+        Lat: {lat:.2f}, Lon: {lon:.2f}<br>
+        Probabilidad: <b>{probability:.0%} ({level})</b>
+        """
+        folium.Marker(
+            location=[lat, lon],
+            popup=folium.Popup(popup_text, max_width=300),
+            icon=folium.Icon(color=color, icon="life-ring", prefix='fa')
+        ).add_to(m)
 
-    # Renderizar el mapa de Folium en Streamlit y capturar clics
-    # La clave aquí es 'return_on_hover=True' para la interactividad de coordenadas
-    # Aunque la captura de clic directo se maneja con 'st_folium'
-    map_data = st_folium(
-        m,
-        height=600,
-        width="100%",
-        feature_group_to_add=None,
-        returned_objects=["last_clicked"], # Devuelve la última ubicación clicada
-        key="global_map" # Clave única para el componente Streamlit
-    )
+    # Renderizar el mapa y capturar el último clic
+    map_data = st_folium(m, height=600, width="100%", returned_objects=["last_clicked"])
 
-# --- Columna 2: Controles y Resultados de Predicción ---
-with col2:
-    st.subheader("Análisis de Punto y Fecha")
+    # Actualizar la ubicación del clic en el estado de la sesión
+    if map_data and map_data["last_clicked"]:
+        st.session_state["last_clicked"] = map_data["last_clicked"]
+
+
+# --- COLUMNA 2: CONTROLES Y RESULTADOS ---
+with results_col:
+    st.header("Panel de Análisis")
 
     # Selector de fecha
-    selected_date = st.date_input("Selecciona una fecha para el análisis:", datetime.date.today())
+    st.date_input(
+        "Selecciona Mes y Año:",
+        value=datetime.date.today(),
+        min_value=datetime.date(2020, 1, 1),
+        max_value=datetime.date(2030, 12, 31),
+        key='date_input' # Usamos una 'key' para acceder al valor desde otras partes del código
+    )
 
     st.markdown("---")
-    st.markdown("### Coordenadas del Punto Seleccionado:")
 
-    # Mostrar las coordenadas del último clic
-    clicked_lat = None
-    clicked_lon = None
-
-    if map_data and map_data["last_clicked"]:
-        clicked_lat = map_data["last_clicked"]["lat"]
-        clicked_lon = map_data["last_clicked"]["lng"]
-        st.write(f"**Latitud:** {clicked_lat:.4f}")
-        st.write(f"**Longitud:** {clicked_lon:.4f}")
+    # Mostrar los resultados si hay un punto seleccionado
+    if st.session_state["last_clicked"]:
+        lat = st.session_state["last_clicked"]["lat"]
+        lon = st.session_state["last_clicked"]["lng"]
+        date = st.session_state.date_input
+        
+        # Recalcular la probabilidad para mostrarla en el panel
+        probability = mock_model_predict(lat, lon, date.month, date.year)
+        level, color, emoji = get_probability_details(probability)
+        
+        st.subheader(f"Resultado para el Punto Seleccionado:")
+        st.metric(label=f"{emoji} Nivel de Probabilidad", value=level)
+        st.metric(label="Valor de Probabilidad", value=f"{probability:.2%}")
+        st.progress(probability)
+        
+        with st.expander("Detalles de la Entrada"):
+            st.write(f"**Latitud:** {lat:.4f}")
+            st.write(f"**Longitud:** {lon:.4f}")
+            st.write(f"**Fecha:** {date.strftime('%B %Y')}")
     else:
-        st.write("Haz clic en un punto del mapa para seleccionarlo.")
-
-    # Botón de análisis (solo si hay un punto seleccionado)
-    if clicked_lat is not None and clicked_lon is not None:
-        if st.button("✨ Obtener Predicción"):
-            # --- Lógica de Predicción ---
-            # Aquí es donde integrarías tu modelo de TensorFlow
-            # 1. Obtener los datos ambientales (PACE, SWOT, etc.) para (clicked_lat, clicked_lon, selected_date)
-            #    Ejemplo: `environmental_features = get_environmental_data_for_point(clicked_lat, clicked_lon, selected_date)`
-
-            # 2. Usar tu modelo de TensorFlow para predecir la probabilidad
-            #    Ejemplo: `prediction_probability = your_tensorflow_model.predict(environmental_features)`
-
-            # --- SIMULACIÓN DE PREDICCIÓN (REEMPLAZA ESTO CON TU CÓDIGO REAL) ---
-            # Usamos un poco de aleatoriedad para simular diferentes probabilidades
-            np.random.seed(int(clicked_lat * 1000) + int(clicked_lon * 1000) + selected_date.day)
-            prediction_probability = np.random.uniform(0.1, 0.99) # Probabilidad aleatoria para demostración
-            # --- FIN SIMULACIÓN ---
-
-            st.write("---")
-            st.write("### Resultado de la Predicción:")
-
-            if prediction_probability > 0.6: # Umbral de ejemplo para "POSIBLE"
-                st.success(f"**¡HÁBITAT POSIBLE para forrajeo de tiburones!**")
-                st.metric(label="Probabilidad de Actividad", value=f"{prediction_probability:.0%}")
-                st.info("Condiciones favorables esperadas: Alta concentración de fitoplancton, corrientes oceánicas convergentes.") # Aquí añadirías los fenómenos climáticos relevantes
-            else:
-                st.warning(f"**HÁBITAT POCO PROBABLE**")
-                st.metric(label="Probabilidad de Actividad", value=f"{prediction_probability:.0%}")
-                st.info("Condiciones desfavorables esperadas: Baja productividad primaria, corrientes dispersas.") # Aquí añadirías los fenómenos climáticos relevantes
-        else:
-            st.info("Haz clic en 'Obtener Predicción' para ver el análisis.")
-    else:
-        st.info("Primero haz clic en un punto del mapa para seleccionarlo y luego podrás obtener la predicción.")
-
-    st.sidebar.markdown("---")
-    st.sidebar.header("Opciones de Visualización")
-    st.session_state['show_sightings'] = st.sidebar.checkbox("Mostrar Avistamientos Históricos (OBIS)", value=True)
-    # Aquí puedes añadir más checkboxes para capas de datos de PACE/SWOT si quieres visualizarlas globalmente
+        st.info("ℹ️ Haz clic en un punto del mapa para iniciar el análisis.")
